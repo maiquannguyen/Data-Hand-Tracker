@@ -1,5 +1,5 @@
 {
-  "originHash" : "45bdfd70dfbbeb6f4b44db99cd0fc693c0c7941a5481b8f34e69fac0d0c931ce",
+  "originHash" : "c067f19ec612db833256c2218aff68feb843d592a5f45d48eada9de00b7d633a",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -11,12 +11,30 @@
       }
     },
     {
+      "identity" : "alamofire",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Alamofire/Alamofire.git",
+      "state" : {
+        "revision" : "7595cbcf59809f9977c5f6378500de2ad73b7ddb",
+        "version" : "5.12.0"
+      }
+    },
+    {
       "identity" : "app-check",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/google/app-check.git",
       "state" : {
         "revision" : "bb4002485ff867768dec13bf904a2ddb050bd1b1",
         "version" : "11.3.0"
+      }
+    },
+    {
+      "identity" : "appauth-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/openid/AppAuth-iOS.git",
+      "state" : {
+        "revision" : "a7caeda164dc5108bf4649472b28a5af65dc6f33",
+        "version" : "2.1.0"
       }
     },
     {
@@ -56,6 +74,15 @@
       }
     },
     {
+      "identity" : "googlesignin-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/google/GoogleSignIn-iOS.git",
+      "state" : {
+        "revision" : "08d8dcecafb575f98879ffdbb8302c1b9ad65d19",
+        "version" : "9.2.0"
+      }
+    },
+    {
       "identity" : "googleutilities",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/google/GoogleUtilities.git",
@@ -78,8 +105,17 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/google/gtm-session-fetcher.git",
       "state" : {
-        "revision" : "c0ac7575d70050c2973ba2318bd5af47f8e8153a",
-        "version" : "5.3.0"
+        "revision" : "a2ab612cb980066ee56d90d60d8462992c07f24b",
+        "version" : "3.5.0"
+      }
+    },
+    {
+      "identity" : "gtmappauth",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/google/GTMAppAuth.git",
+      "state" : {
+        "revision" : "56e0ccf09a6dd29dc7e68bdf729598240ca8aa16",
+        "version" : "5.0.0"
       }
     },
     {
@@ -125,6 +161,15 @@
       "state" : {
         "revision" : "f4a19a3c313dc2616c70bb49d29a799fb16be837",
         "version" : "2.4.1"
+      }
+    },
+    {
+      "identity" : "snapkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/SnapKit/SnapKit.git",
+      "state" : {
+        "revision" : "e27a338a03a5f388de759da63f9baf7988ed9e00",
+        "version" : "6.0.0"
       }
     }
   ],

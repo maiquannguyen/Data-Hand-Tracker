@@ -235,11 +235,12 @@ final class VideoCaptureViewController: UIViewController {
 
     // MARK: - Actions
     @objc private func stopTapped() {
-        viewModel.stopCapture { [weak self] url in
+        viewModel.stopCapture { [weak self] videoItem in
             DispatchQueue.main.async {
                 self?.dismiss(animated: true) {
-                    if let url {
-                        print("Recording saved to: \(url)")
+                    // TODO: Pass videoItem to ListVideosViewModel to trigger upload prompt if needed
+                    if let videoItem {
+                        print("Video saved: \(videoItem.fileName)")
                     }
                 }
             }

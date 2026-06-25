@@ -128,11 +128,22 @@ final class VideoCaptureViewModel {
         captureState = .recording
     }
 
-    func stopCapture(completion: @escaping (URL?) -> Void) {
+    func stopCapture(completion: @escaping (VideoItem?) -> Void) {
         cancelCountdown()
         captureState = .stopped
-        cameraService.stopRecording { url in
-            completion(url)
+        cameraService.stopRecording { [weak self] tempURL in
+            guard let tempURL else {
+                completion(nil)
+                return
+            }
+            do {
+                let videoItem = try VideoStorageService.shared.saveVideo(from: tempURL)
+                completion(videoItem)
+            } catch {
+                // TODO: Handle storage error — surface to UI if needed
+                print("Failed to save video: \(error)")
+                completion(nil)
+            }
         }
     }
 

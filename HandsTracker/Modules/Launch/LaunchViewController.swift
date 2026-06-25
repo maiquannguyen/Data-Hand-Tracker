@@ -8,6 +8,7 @@
 import UIKit
 import Lottie
 import Combine
+import SnapKit
 
 final class LaunchViewController: UIViewController {
 
@@ -16,7 +17,6 @@ final class LaunchViewController: UIViewController {
         let av = LottieAnimationView(name: "loading")
         av.contentMode = .scaleAspectFit
         av.loopMode = .playOnce
-        av.translatesAutoresizingMaskIntoConstraints = false
         return av
     }()
 
@@ -27,7 +27,6 @@ final class LaunchViewController: UIViewController {
         lbl.textColor = AppColors.primary
         lbl.textAlignment = .center
         lbl.alpha = 0
-        lbl.translatesAutoresizingMaskIntoConstraints = false
         return lbl
     }()
 
@@ -53,16 +52,16 @@ final class LaunchViewController: UIViewController {
         view.addSubview(animationView)
         view.addSubview(appNameLabel)
 
-        NSLayoutConstraint.activate([
-            animationView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            animationView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -40),
-            animationView.widthAnchor.constraint(equalToConstant: 200),
-            animationView.heightAnchor.constraint(equalToConstant: 200),
+        animationView.snp.makeConstraints {
+            $0.centerX.equalToSuperview()
+            $0.centerY.equalToSuperview().offset(-40)
+            $0.size.equalTo(CGSize(width: 200, height: 200))
+        }
 
-            appNameLabel.topAnchor.constraint(equalTo: animationView.bottomAnchor, constant: 20),
-            appNameLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            appNameLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
-        ])
+        appNameLabel.snp.makeConstraints {
+            $0.top.equalTo(animationView.snp.bottom).offset(20)
+            $0.leading.trailing.equalToSuperview().inset(20)
+        }
     }
 
     private func bindViewModel() {
@@ -95,6 +94,9 @@ final class LaunchViewController: UIViewController {
             termsVC.modalPresentationStyle = .overFullScreen
             termsVC.modalTransitionStyle = .crossDissolve
             present(termsVC, animated: true)
+        case .login:
+            let nav = UINavigationController(rootViewController: LoginViewController())
+            UIApplication.shared.setRootViewController(nav, animated: true)
         case .home:
             UIApplication.shared.setRootViewController(HomeTabBarController(), animated: true)
         }

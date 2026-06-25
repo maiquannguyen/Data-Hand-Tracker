@@ -182,7 +182,7 @@ final class TermsViewController: UIViewController {
             .filter { $0 }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                self?.navigateToHome()
+                self?.navigateAfterAccept()
             }
             .store(in: &cancellables)
     }
@@ -197,9 +197,10 @@ final class TermsViewController: UIViewController {
     }
 
     // MARK: - Navigation
-    private func navigateToHome() {
-        let homeVC = HomeTabBarController()
-        UIApplication.shared.setRootViewController(homeVC, animated: true)
+    private func navigateAfterAccept() {
+        // Navigate to Login; auth state will determine if user goes to Home
+        let nav = UINavigationController(rootViewController: LoginViewController())
+        UIApplication.shared.setRootViewController(nav, animated: true)
     }
 }
 
