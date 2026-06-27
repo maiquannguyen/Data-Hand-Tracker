@@ -8,30 +8,27 @@
 import UIKit
 import AVFoundation
 import Combine
+import SnapKit
 
 final class VideoCaptureViewController: UIViewController {
 
     // MARK: - UI
-    private var previewLayer: AVCaptureVideoPreviewLayer?
 
     private let previewView: UIView = {
         let v = UIView()
         v.backgroundColor = .black
-        v.translatesAutoresizingMaskIntoConstraints = false
         return v
     }()
 
     private let leftHandLabel: PillLabel = {
         let lbl = PillLabel()
         lbl.setText("Left Hand", isDetected: false)
-        lbl.translatesAutoresizingMaskIntoConstraints = false
         return lbl
     }()
 
     private let rightHandLabel: PillLabel = {
         let lbl = PillLabel()
         lbl.setText("Right Hand", isDetected: false)
-        lbl.translatesAutoresizingMaskIntoConstraints = false
         return lbl
     }()
 
@@ -41,16 +38,26 @@ final class VideoCaptureViewController: UIViewController {
         lbl.textColor = .white
         lbl.textAlignment = .center
         lbl.alpha = 0
-        lbl.translatesAutoresizingMaskIntoConstraints = false
         return lbl
     }()
 
     private let statusBadge: StatusBadgeView = {
         let v = StatusBadgeView()
-        v.translatesAutoresizingMaskIntoConstraints = false
         return v
     }()
 
+    private let waitingLabel: UILabel = {
+        let lbl = UILabel()
+        lbl.text = "Show both hands to begin"
+        lbl.font = AppFonts.body(16)
+        lbl.textColor = UIColor.white.withAlphaComponent(0.85)
+        lbl.textAlignment = .center
+        lbl.numberOfLines = 2
+        return lbl
+    }()
+
+    /// Stop button — anchored to bottom-center in portrait,
+    /// bottom-trailing in landscape so it never overlaps the hands.
     private let stopButton: UIButton = {
         var config = UIButton.Configuration.filled()
         config.title = "Stop"
@@ -61,85 +68,200 @@ final class VideoCaptureViewController: UIViewController {
         config.baseForegroundColor = .white
         config.cornerStyle = .capsule
         config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 20, bottom: 12, trailing: 20)
-        let btn = UIButton(configuration: config)
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        return btn
+        return UIButton(configuration: config)
     }()
 
-    private let waitingLabel: UILabel = {
-        let lbl = UILabel()
-        lbl.text = "Show both hands to begin"
-        lbl.font = AppFonts.body(16)
-        lbl.textColor = UIColor.white.withAlphaComponent(0.85)
-        lbl.textAlignment = .center
-        lbl.numberOfLines = 2
-        lbl.translatesAutoresizingMaskIntoConstraints = false
-        return lbl
+    /// Orientation toggle button — lets user lock/unlock rotation.
+    private let orientationButton: UIButton = {
+        var config = UIButton.Configuration.filled()
+        config.image = UIImage(systemName: "rotate.right")
+        config.baseBackgroundColor = UIColor.black.withAlphaComponent(0.55)
+        config.baseForegroundColor = .white
+        config.cornerStyle = .capsule
+        config.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10)
+        return UIButton(configuration: config)
     }()
+
+    // MARK: - Layout constraints that change on rotation
+
+    private var portraitConstraints  = [Constraint]()
+    private var landscapeConstraints = [Constraint]()
+    private var stopButtonConstraint: Constraint?
+
+    // MARK: - Preview layer
+
+    private var previewLayer: AVCaptureVideoPreviewLayer?
 
     // MARK: - ViewModel
+
     private let viewModel = VideoCaptureViewModel()
     private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Lifecycle
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+        setupConstraints()
         bindViewModel()
         setupActions()
         setupPreviewLayer()
         startCamera()
+        observeOrientation()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         viewModel.stopSession()
+        NotificationCenter.default.removeObserver(self, name: UIDevice.orientationDidChangeNotification, object: nil)
     }
 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        previewLayer?.frame = previewView.bounds
+
+        // Sync preview layer connection orientation
+        if let connection = previewLayer?.connection, connection.isVideoRotationAngleSupported(0) {
+            updatePreviewOrientation(connection: connection)
+        }
+    }
+
+    // MARK: - Orientation Support
+
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-        return [.portrait, .landscape]
+        return [.portrait, .landscapeLeft, .landscapeRight]
     }
 
     override var prefersStatusBarHidden: Bool { true }
 
-    // MARK: - Setup
+    private func observeOrientation() {
+        UIDevice.current.beginGeneratingDeviceOrientationNotifications()
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(deviceOrientationDidChange),
+            name: UIDevice.orientationDidChangeNotification,
+            object: nil
+        )
+    }
+
+    @objc private func deviceOrientationDidChange() {
+        let orientation = UIDevice.current.orientation
+        guard orientation.isValidInterfaceOrientation else { return }
+
+        // Inform HandDetectionService so it can pass correct orientation to MPImage
+        viewModel.updateOrientation(orientation)
+
+        // Update button layout
+//        updateLayoutForOrientation(orientation)
+    }
+
+    private func updateLayoutForOrientation(_ orientation: UIDeviceOrientation) {
+        // Re-apply stop button position
+        stopButton.snp.updateConstraints { make in
+            if orientation.isLandscape {
+                make.trailing.equalTo(view.safeAreaLayoutGuide).inset(24)
+                make.bottom.equalTo(view.safeAreaLayoutGuide).inset(24)
+                make.centerX.equalToSuperview().priority(.low)
+            } else {
+                make.centerX.equalToSuperview()
+                make.bottom.equalTo(view.safeAreaLayoutGuide).inset(30)
+                make.trailing.equalToSuperview().priority(.low)
+            }
+        }
+        UIView.animate(withDuration: 0.25) { self.view.layoutIfNeeded() }
+    }
+
+    private func updatePreviewOrientation(connection: AVCaptureConnection) {
+        let orientation = UIDevice.current.orientation
+        if #available(iOS 17.0, *) {
+            let angle: CGFloat
+            switch orientation {
+            case .landscapeLeft:        angle = 0
+            case .landscapeRight:       angle = 180
+            case .portraitUpsideDown:   angle = 270
+            default:                    angle = 90   // portrait
+            }
+            if connection.isVideoRotationAngleSupported(angle) {
+                connection.videoRotationAngle = angle
+            }
+        } else {
+            // Fallback on earlier versions
+            if let videoOrientation = videoOrientation(for: orientation),
+               connection.isVideoOrientationSupported {
+                connection.videoOrientation = videoOrientation
+            }
+        }
+    }
+    
+    private func videoOrientation(for deviceOrientation: UIDeviceOrientation) -> AVCaptureVideoOrientation? {
+        switch deviceOrientation {
+        case .portrait:
+            return .portrait
+        case .portraitUpsideDown:
+            return .portraitUpsideDown
+        case .landscapeLeft:
+            // Device left = camera right
+            return .landscapeRight
+        case .landscapeRight:
+            return .landscapeLeft
+        default:
+            return nil
+        }
+    }
+
+    // MARK: - Setup UI
+
     private func setupUI() {
         view.backgroundColor = .black
-        view.addSubview(previewView)
-        view.addSubview(leftHandLabel)
-        view.addSubview(rightHandLabel)
-        view.addSubview(countdownLabel)
-        view.addSubview(statusBadge)
-        view.addSubview(stopButton)
-        view.addSubview(waitingLabel)
-
-        NSLayoutConstraint.activate([
-            previewView.topAnchor.constraint(equalTo: view.topAnchor),
-            previewView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            previewView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            previewView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-
-            leftHandLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            leftHandLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-
-            rightHandLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            rightHandLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-
-            countdownLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            countdownLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-
-            statusBadge.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            statusBadge.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-
-            waitingLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            waitingLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 60),
-            waitingLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),
-            waitingLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40),
-
-            stopButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -30),
-            stopButton.centerXAnchor.constraint(equalTo: view.centerXAnchor)
-        ])
+        [previewView, leftHandLabel, rightHandLabel,
+         countdownLabel, statusBadge, waitingLabel,
+         stopButton, orientationButton].forEach { view.addSubview($0) }
     }
+
+    private func setupConstraints() {
+        previewView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+
+        leftHandLabel.snp.makeConstraints {
+            $0.top.equalTo(view.safeAreaLayoutGuide).offset(20)
+            $0.leading.equalTo(view.safeAreaLayoutGuide).offset(20)
+        }
+
+        rightHandLabel.snp.makeConstraints {
+            $0.top.equalTo(view.safeAreaLayoutGuide).offset(20)
+            $0.trailing.equalTo(view.safeAreaLayoutGuide).inset(20)
+        }
+
+        statusBadge.snp.makeConstraints {
+            $0.top.equalTo(view.safeAreaLayoutGuide).offset(20)
+            $0.centerX.equalToSuperview()
+        }
+
+        countdownLabel.snp.makeConstraints {
+            $0.center.equalToSuperview()
+        }
+
+        waitingLabel.snp.makeConstraints {
+            $0.centerX.equalToSuperview()
+            $0.centerY.equalToSuperview().offset(70)
+            $0.leading.trailing.equalToSuperview().inset(40)
+        }
+
+        // Stop button — portrait default (center bottom)
+        stopButton.snp.makeConstraints {
+            $0.centerX.equalToSuperview()
+            $0.bottom.equalTo(view.safeAreaLayoutGuide).inset(30)
+        }
+
+        orientationButton.snp.makeConstraints {
+            $0.bottom.equalTo(view.safeAreaLayoutGuide).inset(30)
+            $0.leading.equalTo(view.safeAreaLayoutGuide).offset(24)
+            $0.size.equalTo(CGSize(width: 44, height: 44))
+        }
+    }
+
+    // MARK: - Preview Layer
 
     private func setupPreviewLayer() {
         let layer = AVCaptureVideoPreviewLayer(session: viewModel.cameraService.session)
@@ -148,10 +270,7 @@ final class VideoCaptureViewController: UIViewController {
         previewLayer = layer
     }
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        previewLayer?.frame = previewView.bounds
-    }
+    // MARK: - Binding
 
     private func bindViewModel() {
         viewModel.$leftHandDetected
@@ -204,9 +323,7 @@ final class VideoCaptureViewController: UIViewController {
 
         case .recording:
             waitingLabel.isHidden = true
-            UIView.animate(withDuration: 0.3) {
-                self.countdownLabel.alpha = 0
-            }
+            UIView.animate(withDuration: 0.3) { self.countdownLabel.alpha = 0 }
             statusBadge.setState(.recording)
 
         case .paused:
@@ -221,29 +338,36 @@ final class VideoCaptureViewController: UIViewController {
         }
     }
 
+    // MARK: - Actions
+
     private func setupActions() {
         stopButton.addTarget(self, action: #selector(stopTapped), for: .touchUpInside)
+        orientationButton.addTarget(self, action: #selector(orientationTapped), for: .touchUpInside)
     }
 
-    private func startCamera() {
-        viewModel.requestPermissionAndStart { [weak self] granted in
-            if !granted {
-                self?.showPermissionDeniedAlert()
-            }
-        }
-    }
-
-    // MARK: - Actions
     @objc private func stopTapped() {
         viewModel.stopCapture { [weak self] videoItem in
             DispatchQueue.main.async {
                 self?.dismiss(animated: true) {
                     // TODO: Pass videoItem to ListVideosViewModel to trigger upload prompt if needed
                     if let videoItem {
-                        print("Video saved: \(videoItem.fileName)")
+                        print("[Capture] Video saved: \(videoItem.fileName)")
                     }
                 }
             }
+        }
+    }
+
+    @objc private func orientationTapped() {
+        // TODO: Implement orientation lock toggle if needed
+        // For now, rotation follows device naturally via supportedInterfaceOrientations
+    }
+
+    // MARK: - Camera
+
+    private func startCamera() {
+        viewModel.requestPermissionAndStart { [weak self] granted in
+            if !granted { self?.showPermissionDeniedAlert() }
         }
     }
 

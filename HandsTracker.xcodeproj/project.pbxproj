@@ -14,6 +14,7 @@
 		267D45E62FED1A9400D61E63 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 267D45E52FED1A9400D61E63 /* SnapKit */; };
 		267D466D2FED70E800D61E63 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 267D466C2FED70E800D61E63 /* GoogleSignIn */; };
 		267D46702FED712600D61E63 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 267D466F2FED712600D61E63 /* Alamofire */; };
+		267D46782FEF895400D61E63 /* SwiftTasksVision in Frameworks */ = {isa = PBXBuildFile; productRef = 267D46772FEF895400D61E63 /* SwiftTasksVision */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -78,6 +79,7 @@
 				267D45482FEB55D400D61E63 /* FirebaseCore in Frameworks */,
 				267D46702FED712600D61E63 /* Alamofire in Frameworks */,
 				267D45442FEB55D400D61E63 /* FirebaseAuth in Frameworks */,
+				267D46782FEF895400D61E63 /* SwiftTasksVision in Frameworks */,
 				267D45462FEB55D400D61E63 /* FirebaseAuthCombine-Community in Frameworks */,
 				267D45872FEBA0D300D61E63 /* Lottie in Frameworks */,
 				267D45E62FED1A9400D61E63 /* SnapKit in Frameworks */,
@@ -149,6 +151,7 @@
 				267D45E52FED1A9400D61E63 /* SnapKit */,
 				267D466C2FED70E800D61E63 /* GoogleSignIn */,
 				267D466F2FED712600D61E63 /* Alamofire */,
+				267D46772FEF895400D61E63 /* SwiftTasksVision */,
 			);
 			productName = HandsTracker;
 			productReference = 267D45092FEA91B200D61E63 /* HandsTracker.app */;
@@ -239,6 +242,7 @@
 				267D45E42FED1A9400D61E63 /* XCRemoteSwiftPackageReference "SnapKit" */,
 				267D466B2FED70E800D61E63 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 				267D466E2FED712600D61E63 /* XCRemoteSwiftPackageReference "Alamofire" */,
+				267D46762FEF895400D61E63 /* XCRemoteSwiftPackageReference "SwiftTasksVision" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 267D450A2FEA91B200D61E63 /* Products */;
@@ -337,7 +341,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.smartosc.apollo11;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -374,7 +378,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.smartosc.apollo11;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -669,6 +673,14 @@
 				minimumVersion = 5.12.0;
 			};
 		};
+		267D46762FEF895400D61E63 /* XCRemoteSwiftPackageReference "SwiftTasksVision" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/paescebu/SwiftTasksVision";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.10.21;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -706,6 +718,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 267D466E2FED712600D61E63 /* XCRemoteSwiftPackageReference "Alamofire" */;
 			productName = Alamofire;
+		};
+		267D46772FEF895400D61E63 /* SwiftTasksVision */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 267D46762FEF895400D61E63 /* XCRemoteSwiftPackageReference "SwiftTasksVision" */;
+			productName = SwiftTasksVision;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -64,6 +64,12 @@ final class CameraService: NSObject {
         }
 
         let videoDataOutput = AVCaptureVideoDataOutput()
+        // MediaPipe HandLandmarker requires kCVPixelFormatType_32BGRA.
+        // AVCaptureVideoDataOutput defaults to YUV (420YpCbCr8BiPlanarFullRange)
+        // which MediaPipe rejects with "Unsupported pixel format" — force BGRA here.
+        videoDataOutput.videoSettings = [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+        ]
         videoDataOutput.setSampleBufferDelegate(self, queue: DispatchQueue(label: "com.handstracker.camera.buffer"))
         videoDataOutput.alwaysDiscardsLateVideoFrames = true
         if session.canAddOutput(videoDataOutput) { session.addOutput(videoDataOutput) }

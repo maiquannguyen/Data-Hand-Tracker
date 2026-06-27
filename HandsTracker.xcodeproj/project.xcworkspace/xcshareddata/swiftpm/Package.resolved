@@ -1,5 +1,5 @@
 {
-  "originHash" : "c067f19ec612db833256c2218aff68feb843d592a5f45d48eada9de00b7d633a",
+  "originHash" : "04a5db7fa86384ef9cd8882d3118c65c0ead190387d0ebb9b32691b9a947ba03",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -170,6 +170,15 @@
       "state" : {
         "revision" : "e27a338a03a5f388de759da63f9baf7988ed9e00",
         "version" : "6.0.0"
+      }
+    },
+    {
+      "identity" : "swifttasksvision",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/paescebu/SwiftTasksVision",
+      "state" : {
+        "revision" : "2cba94cf7d38ace98e32dc08d1de7a6895f05057",
+        "version" : "0.10.21"
       }
     }
   ],

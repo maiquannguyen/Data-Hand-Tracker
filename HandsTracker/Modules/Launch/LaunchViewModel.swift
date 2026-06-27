@@ -34,7 +34,7 @@ final class LaunchViewModel {
             // Terms accepted — check auth state
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
                 guard let self else { return }
-                self.destination = self.tokenManager.isAuthenticated ? .home : .login
+                self.destination = .home
             }
         } else {
             // First launch — show terms after 5s

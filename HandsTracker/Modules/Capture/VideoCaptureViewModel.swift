@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import AVFoundation
+import UIKit
 
 enum CaptureState {
     case idle
@@ -39,6 +40,12 @@ final class VideoCaptureViewModel {
         bindHandDetection()
     }
 
+    // MARK: - Orientation forwarding
+    /// Called by VideoCaptureViewController on each device orientation change.
+    func updateOrientation(_ orientation: UIDeviceOrientation) {
+        handDetectionService.currentOrientation = orientation
+    }
+
     // MARK: - Binding
     private func bindHandDetection() {
         cameraService.sampleBufferSubject
@@ -56,7 +63,7 @@ final class VideoCaptureViewModel {
     }
 
     private func handleDetectionResult(_ result: HandDetectionResult) {
-        leftHandDetected = result.leftHandDetected
+        leftHandDetected  = result.leftHandDetected
         rightHandDetected = result.rightHandDetected
 
         switch captureState {
@@ -141,13 +148,13 @@ final class VideoCaptureViewModel {
                 completion(videoItem)
             } catch {
                 // TODO: Handle storage error — surface to UI if needed
-                print("Failed to save video: \(error)")
+                print("[VideoCaptureViewModel] Failed to save video: \(error)")
                 completion(nil)
             }
         }
     }
 
-    // MARK: - Setup
+    // MARK: - Session
     func requestPermissionAndStart(completion: @escaping (Bool) -> Void) {
         cameraService.requestPermissionAndSetup { [weak self] granted in
             guard granted else {
